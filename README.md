@@ -11,9 +11,12 @@ Player by moving builds the map.
 ![](RepoResources/3.png)
 ![](RepoResources/4.png)
 ![](RepoResources/5.png)
+![](RepoResources/6.png)
 
 ### TODOs
 
+* Correct positioning of blocks, props and popups.
+* Track all popups (now only last one is tracked)
 * Taller and lower world blocks
 * Player movement responding to World Blocks collisions
 * Player movement responding to World props collisions
