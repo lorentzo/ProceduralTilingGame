@@ -145,15 +145,18 @@ public class Tiling : MonoBehaviour
                     if (PlayerToWorldBlock.magnitude < maxDistFromPlayerWorldBlockSpawn)
                     {
                         float noise = Mathf.PerlinNoise(
-                            WorldBlockCo.x*worldBlockVariation+worldBlockJitter, 
-                            WorldBlockCo.y*worldBlockVariation+worldBlockJitter*2.0f);
+                            (WorldBlockCo.x+0.5f)*worldBlockVariation+worldBlockJitter, 
+                            (WorldBlockCo.z+0.5f)*worldBlockVariation+worldBlockJitter);
                         float tresh = worldBlockSpawnTreshDelta;
                         for (int cIdx = 0; cIdx < nWorldBlocks; cIdx++)
                         {
+                            Debug.Log("Noise: " + noise + " tresh: " + tresh + " treshDelta: " + worldBlockSpawnTreshDelta);
                             if (noise > tresh - worldBlockSpawnTreshDelta && noise < tresh)
                             {
                                 WorldBlockCo.y = -3.0f;
                                 GameObject worldBlockInst = Instantiate(WorldBlocks[cIdx], WorldBlockCo, Quaternion.identity);
+                                //Renderer instRenderer = worldBlockInst.GetComponent<Renderer>();
+                                //instRenderer.material.SetColor("_Color", Color.red);
                                 nWorldBlocksBuiltDebug++;
                                 Debug.Log("World Block created! " + nWorldBlocksBuiltDebug);
                                 existingWorldBlockCoordinates[new Vector2Int(i, j)] = worldBlockInst.name;
