@@ -18,6 +18,8 @@ public class Tiling : MonoBehaviour
     private int nWorldBlocksBuiltDebug = 0;
     private List<GameObject> worldBlocksInAnimation = new List<GameObject>();
     private float worldBlocksAnimationSpeed = 10.0f;
+    private float worldBlockStartingYPosition = -5.0f;
+    private float worldBlockEndingYPosition = 0.0f;
 
     public GameObject[] WorldProps;
     private int nWorldProps;
@@ -26,6 +28,8 @@ public class Tiling : MonoBehaviour
     private List<GameObject> worldPropsInAnimation = new List<GameObject>();
     private int nWorldPropsBuiltDebug = 0;
     private float worldPropsAnimationSpeed = 7.0f;
+    private float worldPropStartingYPosition = 5.0f;
+    private float worldPropEndingYPosition = 1.0f;
 
     public GameObject[] WorldPopups;
     private int nWorldPopups;
@@ -35,6 +39,8 @@ public class Tiling : MonoBehaviour
     private int nWorldPopupsBuiltDebug = 0;
     private float worldPopupsAnimationSpeed = 3.0f;
     Vector3 worldPopupsScaleChange;
+    private float worldPopupStartingScale = 0.0f;
+    private float worldPopupEndingScale = 1.0f;
 
     // Start is called before the first frame update
     void Start()
@@ -63,6 +69,132 @@ public class Tiling : MonoBehaviour
         animateWorldProps();
         buildWorldPopups(PlayerCo);
         animateWorldPopups();
+    }
+
+    void buildWorldBlocks(Vector3 PlayerCo)
+    {
+        int k = (int)Mathf.Floor(PlayerCo.x);
+        int l = (int)Mathf.Floor(PlayerCo.z);
+        for (int i = k - nWorldBlocksAroundPlayerTest; i < k + nWorldBlocksAroundPlayerTest; i++)
+        {
+            for (int j = l - nWorldBlocksAroundPlayerTest; j < l + nWorldBlocksAroundPlayerTest; j++)
+            {
+                if (!existingWorldBlockCoordinates.ContainsKey(new Vector2Int(i, j)))
+                {
+                    Vector3 WorldBlockCo = new Vector3(worldBlockCenterDist*i, 0, worldBlockCenterDist*j);
+                    Vector3 PlayerToWorldBlock = WorldBlockCo - PlayerCo;
+                    if (PlayerToWorldBlock.magnitude < maxDistFromPlayerWorldBlockSpawn)
+                    {
+                        float noise = Mathf.PerlinNoise(
+                            (WorldBlockCo.x+0.5f)*worldBlockVariation+worldBlockJitter, 
+                            (WorldBlockCo.z+0.5f)*worldBlockVariation+worldBlockJitter);
+                        float tresh = worldBlockSpawnTreshDelta;
+                        for (int cIdx = 0; cIdx < nWorldBlocks; cIdx++)
+                        {
+                            Debug.Log("Noise: " + noise + " tresh: " + tresh + " treshDelta: " + worldBlockSpawnTreshDelta);
+                            if (noise > tresh - worldBlockSpawnTreshDelta && noise < tresh)
+                            {
+                                WorldBlockCo.y = worldBlockStartingYPosition;
+                                GameObject worldBlockInst = Instantiate(WorldBlocks[cIdx], WorldBlockCo, Quaternion.identity);
+                                //Renderer instRenderer = worldBlockInst.GetComponent<Renderer>();
+                                //instRenderer.material.SetColor("_Color", Color.red);
+                                nWorldBlocksBuiltDebug++;
+                                Debug.Log("World Block created! " + nWorldBlocksBuiltDebug);
+                                existingWorldBlockCoordinates[new Vector2Int(i, j)] = worldBlockInst.name;
+                                worldBlocksInAnimation.Add(worldBlockInst);
+                                break;
+                            }
+                            tresh += worldBlockSpawnTreshDelta;
+                        }
+                    }
+                } 
+            }
+        }
+    }
+
+    void animateWorldBlocks()
+    {
+        List<GameObject> updatedWorldBlocksInAnimation = new List<GameObject>();
+        foreach (GameObject worldBlock in worldBlocksInAnimation)
+        {
+            // Animated by rising from below.
+            float movementY = worldBlocksAnimationSpeed * Time.deltaTime;
+            worldBlock.transform.Translate(0, movementY, 0);
+            if (worldBlock.transform.position.y < worldBlockEndingYPosition)
+            {
+                // Still needs to be animated.
+                updatedWorldBlocksInAnimation.Add(worldBlock);
+            }
+            else
+            {
+                // It is where it should be, fix position.
+                Vector3 worldBlockPosition = worldBlock.transform.position;
+                worldBlockPosition.y = worldBlockEndingYPosition + Random.value * 0.2f;
+                worldBlock.transform.position = worldBlockPosition;
+            }
+        }
+        worldBlocksInAnimation = updatedWorldBlocksInAnimation;
+    }
+
+    void buildWorldProps(Vector3 PlayerCo)
+    {
+        int k = (int)Mathf.Floor(PlayerCo.x);
+        int l = (int)Mathf.Floor(PlayerCo.z);
+        for (int i = k - nWorldBlocksAroundPlayerTest; i < k + nWorldBlocksAroundPlayerTest; i++)
+        {
+            for (int j = l - nWorldBlocksAroundPlayerTest; j < l + nWorldBlocksAroundPlayerTest; j++)
+            {
+                if (Random.value > 0.3) // TODO: control with noise!
+                {
+                    existingWorldPropsCoordinates[new Vector2Int(i, j)] = "Empty";
+                    continue;
+                }
+                if (!existingWorldPropsCoordinates.ContainsKey(new Vector2Int(i, j)))
+                {
+                    // World props are created with jitter around world block centers.
+                    Vector3 PropCo = new Vector3(
+                        worldBlockCenterDist * i + Random.Range(-1.0f, 1.0f), 
+                        0, 
+                        worldBlockCenterDist * j + Random.Range(-1.0f, 1.0f));
+                    Vector3 PlayerToProp = PropCo - PlayerCo;
+                    if (PlayerToProp.magnitude < maxDistFromPlayerPropSpawn)
+                    {
+                        int worldPropIdx = (int)Mathf.Floor(Random.value * nWorldProps);
+                        PropCo.y = worldPropStartingYPosition;
+                        GameObject worldPropInst = Instantiate(WorldProps[worldPropIdx], PropCo, Quaternion.identity);
+                        existingWorldPropsCoordinates[new Vector2Int(i, j)] = worldPropInst.name;
+                        worldPropsInAnimation.Add(worldPropInst);  
+                        nWorldPropsBuiltDebug++;
+                        Debug.Log("World Prop created! " + nWorldPropsBuiltDebug);
+                    }
+                }
+            }
+        }
+    }
+
+    void animateWorldProps()
+    {
+        List<GameObject> updatedWorldPropsInAnimation = new List<GameObject>();
+
+        foreach (GameObject worldProp in worldPropsInAnimation)
+        {
+            // Animated by falling from sky.
+            float movementY = -worldPropsAnimationSpeed * Time.deltaTime;
+            worldProp.transform.Translate(0, movementY, 0);
+            if (worldProp.transform.position.y > worldPropEndingYPosition)
+            {
+                // It still needs to be animated.
+                updatedWorldPropsInAnimation.Add(worldProp);
+            }
+            else
+            {
+                // It is where it should be, fix position.
+                Vector3 worldPropPosition = worldProp.transform.position;
+                worldPropPosition.y = worldPropEndingYPosition + Random.value * 0.2f; // a bit of jitter
+                worldProp.transform.position = worldPropPosition;
+            }
+        }
+        worldPropsInAnimation = updatedWorldPropsInAnimation;
     }
 
     void buildWorldPopups(Vector3 PlayerCo)
@@ -101,9 +233,9 @@ public class Tiling : MonoBehaviour
                             if (PlayerToPopup.magnitude < maxDistFromPlayerPopupSpawn)
                             {
                                 int worldPopupIdx = (int)Mathf.Floor(Random.value * nWorldPopups);
-                                PopupCo.y = 1.5f;
+                                PopupCo.y = worldBlockEndingYPosition + 1.0f;  // it depends on the size of world block
                                 GameObject worldPopupInst = Instantiate(WorldPopups[worldPopupIdx], PopupCo, Quaternion.identity);
-                                worldPopupInst.transform.localScale = new Vector3(0,0,0);
+                                worldPopupInst.transform.localScale = new Vector3(worldPopupStartingScale,worldPopupStartingScale,worldPopupStartingScale);
                                 existingWorldPopupsCoordinates[new Vector2Int(i, j)] = worldPopupInst.name;
                                 worldPopupsInAnimation.Add(worldPopupInst);  
                                 nWorldPopupsBuiltDebug++;
@@ -122,118 +254,17 @@ public class Tiling : MonoBehaviour
         foreach (GameObject popup in worldPopupsInAnimation)
         {
             popup.transform.localScale += worldPopupsScaleChange * Time.deltaTime;
-            if (popup.transform.localScale.x < 1.0f - Random.value + 0.1f)
+            if (popup.transform.localScale.x < worldPopupEndingScale)
             {
+                // Still needs to be animated
                 updatedWorldPopupsInAnimation.Add(popup);
-            } 
+            }
+            else
+            {
+                float popUpScale = worldPopupEndingScale + Random.value * 0.2f;
+                popup.transform.localScale = new Vector3(popUpScale,popUpScale,popUpScale);
+            }
         }
         worldPopupsInAnimation = updatedWorldPopupsInAnimation;
-    }
-
-    void buildWorldBlocks(Vector3 PlayerCo)
-    {
-        int k = (int)Mathf.Floor(PlayerCo.x);
-        int l = (int)Mathf.Floor(PlayerCo.z);
-        for (int i = k - nWorldBlocksAroundPlayerTest; i < k + nWorldBlocksAroundPlayerTest; i++)
-        {
-            for (int j = l - nWorldBlocksAroundPlayerTest; j < l + nWorldBlocksAroundPlayerTest; j++)
-            {
-                if (!existingWorldBlockCoordinates.ContainsKey(new Vector2Int(i, j)))
-                {
-                    Vector3 WorldBlockCo = new Vector3(worldBlockCenterDist*i, 0, worldBlockCenterDist*j);
-                    Vector3 PlayerToWorldBlock = WorldBlockCo - PlayerCo;
-                    if (PlayerToWorldBlock.magnitude < maxDistFromPlayerWorldBlockSpawn)
-                    {
-                        float noise = Mathf.PerlinNoise(
-                            (WorldBlockCo.x+0.5f)*worldBlockVariation+worldBlockJitter, 
-                            (WorldBlockCo.z+0.5f)*worldBlockVariation+worldBlockJitter);
-                        float tresh = worldBlockSpawnTreshDelta;
-                        for (int cIdx = 0; cIdx < nWorldBlocks; cIdx++)
-                        {
-                            Debug.Log("Noise: " + noise + " tresh: " + tresh + " treshDelta: " + worldBlockSpawnTreshDelta);
-                            if (noise > tresh - worldBlockSpawnTreshDelta && noise < tresh)
-                            {
-                                WorldBlockCo.y = -3.0f;
-                                GameObject worldBlockInst = Instantiate(WorldBlocks[cIdx], WorldBlockCo, Quaternion.identity);
-                                //Renderer instRenderer = worldBlockInst.GetComponent<Renderer>();
-                                //instRenderer.material.SetColor("_Color", Color.red);
-                                nWorldBlocksBuiltDebug++;
-                                Debug.Log("World Block created! " + nWorldBlocksBuiltDebug);
-                                existingWorldBlockCoordinates[new Vector2Int(i, j)] = worldBlockInst.name;
-                                worldBlocksInAnimation.Add(worldBlockInst);
-                                break;
-                            }
-                            tresh += worldBlockSpawnTreshDelta;
-                        }
-                    }
-                } 
-            }
-        }
-    }
-
-    void animateWorldBlocks()
-    {
-        List<GameObject> updatedWorldBlocksInAnimation = new List<GameObject>();
-        foreach (GameObject worldBlock in worldBlocksInAnimation)
-        {
-            float movementY = worldBlocksAnimationSpeed * Time.deltaTime;
-            worldBlock.transform.Translate(0,movementY,0);
-            if (worldBlock.transform.position.y < 0.0f)
-            {
-                updatedWorldBlocksInAnimation.Add(worldBlock);
-            } 
-        }
-        worldBlocksInAnimation = updatedWorldBlocksInAnimation;
-    }
-
-    void buildWorldProps(Vector3 PlayerCo)
-    {
-        int k = (int)Mathf.Floor(PlayerCo.x);
-        int l = (int)Mathf.Floor(PlayerCo.z);
-        for (int i = k - nWorldBlocksAroundPlayerTest; i < k + nWorldBlocksAroundPlayerTest; i++)
-        {
-            for (int j = l - nWorldBlocksAroundPlayerTest; j < l + nWorldBlocksAroundPlayerTest; j++)
-            {
-                if (Random.value > 0.3) // TODO: control with noise!
-                {
-                    existingWorldPropsCoordinates[new Vector2Int(i, j)] = "Empty";
-                    continue;
-                }
-                if (!existingWorldPropsCoordinates.ContainsKey(new Vector2Int(i, j)))
-                {
-                    // World props are created with jitter around world block centers.
-                    Vector3 PropCo = new Vector3(
-                        worldBlockCenterDist * i + Random.Range(-1.0f, 1.0f), 
-                        0, 
-                        worldBlockCenterDist * j + Random.Range(-1.0f, 1.0f));
-                    Vector3 PlayerToProp = PropCo - PlayerCo;
-                    if (PlayerToProp.magnitude < maxDistFromPlayerPropSpawn)
-                    {
-                        int worldPropIdx = (int)Mathf.Floor(Random.value * nWorldProps);
-                        PropCo.y = 5.0f;
-                        GameObject worldPropInst = Instantiate(WorldProps[worldPropIdx], PropCo, Quaternion.identity);
-                        existingWorldPropsCoordinates[new Vector2Int(i, j)] = worldPropInst.name;
-                        worldPropsInAnimation.Add(worldPropInst);  
-                        nWorldPropsBuiltDebug++;
-                        Debug.Log("World Prop created! " + nWorldPropsBuiltDebug);
-                    }
-                }
-            }
-        }
-    }
-
-    void animateWorldProps()
-    {
-        List<GameObject> updatedWorldPropsInAnimation = new List<GameObject>();
-        foreach (GameObject worldProp in worldPropsInAnimation)
-        {
-            float movementY = -worldPropsAnimationSpeed * Time.deltaTime; // Maybe scaling?
-            worldProp.transform.Translate(0, movementY, 0);
-            if (worldProp.transform.position.y > 1.0f)
-            {
-                updatedWorldPropsInAnimation.Add(worldProp);
-            } 
-        }
-        worldPropsInAnimation = updatedWorldPropsInAnimation;
     }
 }

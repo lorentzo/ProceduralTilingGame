@@ -13,6 +13,8 @@ Player by moving builds the map.
 
 ### TODOs
 
+* Add Cold-warm gameplay
+* Add props/popups to specific blocks
 * Track all popups (now only last one is tracked)
 * Taller and lower world blocks
 * Secondary animation while world blocks and props are built
