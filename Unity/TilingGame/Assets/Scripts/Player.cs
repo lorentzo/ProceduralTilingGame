@@ -2,9 +2,19 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// Based on: https://catlikecoding.com/unity/tutorials/movement/
+
 public class Player : MonoBehaviour
 {
-    public float speed = 10.0f;
+    public float maxSpeed = 10.0f;
+    public float maxAcceleration = 10.0f;
+    Vector3 velocity, desiredVelocity;
+
+    Rigidbody body;
+
+    void Awake () {
+		body = GetComponent<Rigidbody>();
+	}
 
     // Start is called before the first frame update
     void Start()
@@ -15,17 +25,37 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // Get the horizontal and vertical axis.
-        // By default they are mapped to the arrow keys.
-        // The value is in the range -1 to 1
-        float translationZ = Input.GetAxis("Vertical") * speed;
-        float translationX = Input.GetAxis("Horizontal") * speed;
+        Vector3 playerInput = new Vector3(0,0,0);
+        playerInput.x = Input.GetAxis("Horizontal");
+        playerInput.z = Input.GetAxis("Vertical");
+        playerInput = Vector3.ClampMagnitude(playerInput, 1.0f);
 
-        // Make it move 10 meters per second instead of 10 meters per frame...
-        translationX *= Time.deltaTime;
-        translationZ *= Time.deltaTime;
+        desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.z) * maxSpeed;
+    }
 
-        // Move translation along the object's z-axis
-        transform.Translate(translationX, 0, translationZ);
+    void FixedUpdate()
+    {
+        dynamicMovement();
+    }
+
+    void dynamicMovement()
+    {
+        velocity = body.velocity;
+        
+		float maxSpeedChange = maxAcceleration * Time.deltaTime;
+		velocity.x = Mathf.MoveTowards(velocity.x, desiredVelocity.x, maxSpeedChange);
+        velocity.z = Mathf.MoveTowards(velocity.z, desiredVelocity.z, maxSpeedChange);
+
+		body.velocity = velocity;
+    }
+
+    void kinematicMovement()
+    {
+        float maxSpeedChange = maxAcceleration * Time.deltaTime;
+        velocity.x = Mathf.MoveTowards(velocity.x, desiredVelocity.x, maxSpeedChange);
+        velocity.z = Mathf.MoveTowards(velocity.z, desiredVelocity.z, maxSpeedChange);
+
+        Vector3 displacement = velocity * Time.deltaTime;
+        transform.position += displacement;
     }
 }

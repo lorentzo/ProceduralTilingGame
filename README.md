@@ -13,10 +13,16 @@ Player by moving builds the map.
 
 ### TODOs
 
-* Player movement responding to World Blocks collisions
-* Player movement responding to World props collisions
-* Correct positioning of blocks, props and popups.
 * Track all popups (now only last one is tracked)
 * Taller and lower world blocks
 * Secondary animation while world blocks and props are built
 * Better world blocks and world prop models (Blender and Houdini low poly)
+  * Correct positioning of blocks, props and popups.
+* Player: 
+  * Light
+  * Jumping
+  * Camera
+  * Collision with world block, props and popups
+* Light
+  * world light
+  * local lights
