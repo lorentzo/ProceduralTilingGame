@@ -10,10 +10,12 @@ Player by moving builds the map.
 ![](RepoResources/2.png)
 ![](RepoResources/3.png)
 ![](RepoResources/4.png)
+![](RepoResources/5.png)
 
 ### TODOs
 
 * Add Cold-warm gameplay
+* Worldblocks do not have te be always instances - leave some empty ground?
 * Add props/popups to specific blocks
 * Track all popups (now only last one is tracked)
 * Taller and lower world blocks
@@ -22,9 +24,8 @@ Player by moving builds the map.
   * Correct positioning of blocks, props and popups.
 * Player: 
   * Light
-  * Jumping
-  * Camera
-  * Collision with world block, props and popups
+  * Camera rotation
+  * enhance Collision with world block, props and popups
 * Light
   * world light
   * local lights
