@@ -11,6 +11,10 @@ public class World : MonoBehaviour
     Dictionary<Vector2Int, string> existingWorldEndBlockCoordinates = new Dictionary<Vector2Int, string>();
     private int nWorldEndBlocksDebug;
 
+    public GameObject[] lights;
+    Dictionary<Vector2Int, string> existingLightCoordinates = new Dictionary<Vector2Int, string>();
+    private int nCreatedLightsDebug = 0;
+
     public GameObject[] WorldBlocks;
     private int nWorldBlocks;
     float worldBlockCenterDist;
@@ -45,7 +49,7 @@ public class World : MonoBehaviour
     private float worldPopupsAnimationSpeed = 3.0f;
     Vector3 worldPopupsScaleChange;
     private float worldPopupStartingScale = 0.0f;
-    private float worldPopupEndingScale = 1.0f;
+    private float worldPopupEndingScale = 0.3f;
 
     public GameObject objectToFind;
 
@@ -80,10 +84,11 @@ public class World : MonoBehaviour
         buildWorldBlocks(PlayerCo);
         animateWorldBlocks();
         buildWorldProps(PlayerCo);
+        createLightsOnProps(PlayerCo);
         animateWorldProps();
         buildWorldPopups(PlayerCo);
         animateWorldPopups();
-        Debug.Log("Player to Object To Find: " + Vector3.Distance(PlayerCo, ObjectTOFindCo));
+        //Debug.Log("Player to Object To Find: " + Vector3.Distance(PlayerCo, ObjectTOFindCo));
     }
 
     void buildWorldEnd(Vector3 PlayerCo)
@@ -196,7 +201,7 @@ public class World : MonoBehaviour
                     continue;
                 }
                 if (!existingWorldPropsCoordinates.ContainsKey(new Vector2Int(i, j)))
-                {
+                {                    
                     // World props are created with jitter around world block centers.
                     Vector3 PropCo = new Vector3(
                         worldBlockCenterDist * i + Random.Range(-1.0f, 1.0f), 
@@ -216,6 +221,48 @@ public class World : MonoBehaviour
                 }
             }
         }
+    }
+
+    void createLightsOnProps(Vector3 PlayerCo)
+    {
+        int k = (int)Mathf.Floor(PlayerCo.x);
+        int l = (int)Mathf.Floor(PlayerCo.z);
+        for (int i = k - nWorldBlocksAroundPlayerTest; i < k + nWorldBlocksAroundPlayerTest; i++)
+        {
+            for (int j = l - nWorldBlocksAroundPlayerTest; j < l + nWorldBlocksAroundPlayerTest; j++)
+            {
+                if (Mathf.Abs(i) >= worldSize || Mathf.Abs(j) >= worldSize)
+                {
+                    continue;
+                }
+
+                // Light create only if prop exist and it is not empty.
+                bool createLight = false;
+                if (existingWorldPropsCoordinates.ContainsKey(new Vector2Int(i, j)))
+                {
+                    createLight = true;
+                    string existingWorldPropsCoordinatesValue;
+                    existingWorldPropsCoordinates.TryGetValue(new Vector2Int(i, j), out existingWorldPropsCoordinatesValue);
+                    if (existingWorldPropsCoordinatesValue == "Empty")
+                    {
+                        createLight = false;
+                    }
+                }
+
+                if(createLight)
+                {
+                    // Lights are created at world props.
+                    if(!existingLightCoordinates.ContainsKey(new Vector2Int(i, j)))
+                    {
+                        int lightIdx = (int)Mathf.Floor(Random.value * lights.Length);
+                        GameObject lightInst = Instantiate(lights[lightIdx], new Vector3(i, 2.0f, j), Quaternion.identity);
+                        nCreatedLightsDebug++;
+                        Debug.Log("Light created: " + nCreatedLightsDebug);
+                        existingLightCoordinates[new Vector2Int(i, j)] = lightInst.name;
+                    }
+                }                
+            }
+        }   
     }
 
     void animateWorldProps()

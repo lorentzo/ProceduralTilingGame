@@ -7,6 +7,8 @@ Unity 2022.3.13f1
 Player by moving builds the map.
 
 ![](RepoResources/1.png)
+![](RepoResources/2a.png)
+![](RepoResources/3a.png)
 ![](RepoResources/2.png)
 ![](RepoResources/3.png)
 ![](RepoResources/4.png)
