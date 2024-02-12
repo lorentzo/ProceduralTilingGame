@@ -16,15 +16,15 @@ public class Player : MonoBehaviour
 
     Rigidbody body;
 
-    void OnCollisionEnter () 
+    void OnCollisionEnter (Collision collision) 
     {
-		onGround = true;
+		EvaluateCollision(collision);
 	}
 
     // OnCollisionStay gets invoked each physics step as long as the collision remains alive. 
-    void OnCollisionStay()
+    void OnCollisionStay(Collision collision)
     {
-        onGround = true;
+        EvaluateCollision(collision);
     }
 
     void Awake () {
@@ -40,6 +40,11 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // If player falls below the world, restart position.
+        if (transform.position.y < -3.0f)
+        {
+            transform.position = new Vector3(0.0f, 3.0f, 0.0f);
+        }
         // Horizontal and vertical (x,z) movement.
         Vector3 playerInput = new Vector3(0,0,0);
         playerInput.x = Input.GetAxis("Horizontal");
@@ -77,6 +82,16 @@ public class Player : MonoBehaviour
         {
             velocity.y += Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
         }
+    }
+
+    void EvaluateCollision(Collision collision)
+    {
+        // Check normal of each contact point.
+        for (int i = 0; i < collision.contactCount; i++) 
+        {
+			Vector3 normal = collision.GetContact(i).normal;
+            onGround |= normal.y >= 0.9f; // onGround is only when normal is close to ground normal.
+		}
     }
 
     void kinematicMovement()

@@ -11,10 +11,14 @@ Player by moving builds the map.
 ![](RepoResources/3.png)
 ![](RepoResources/4.png)
 ![](RepoResources/5.png)
+![](RepoResources/6.png)
+![](RepoResources/7.png)
 
 ### TODOs
 
 * Add Cold-warm gameplay
+  * Add UI element: from red to blue depending on distance
+  * Change light depending on distance 
 * Worldblocks do not have te be always instances - leave some empty ground?
 * Add props/popups to specific blocks
 * Track all popups (now only last one is tracked)
@@ -25,6 +29,7 @@ Player by moving builds the map.
 * Player: 
   * Light
   * Camera rotation
+  * fix no wall jumping
   * enhance Collision with world block, props and popups
 * Light
   * world light

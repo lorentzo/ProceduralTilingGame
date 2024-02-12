@@ -2,9 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Tiling : MonoBehaviour
+public class World : MonoBehaviour
 {
     public GameObject Player;
+
+    public int worldSize = 30;
+    public GameObject worldEndBlock;
+    Dictionary<Vector2Int, string> existingWorldEndBlockCoordinates = new Dictionary<Vector2Int, string>();
+    private int nWorldEndBlocksDebug;
 
     public GameObject[] WorldBlocks;
     private int nWorldBlocks;
@@ -42,6 +47,8 @@ public class Tiling : MonoBehaviour
     private float worldPopupStartingScale = 0.0f;
     private float worldPopupEndingScale = 1.0f;
 
+    public GameObject objectToFind;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -57,18 +64,49 @@ public class Tiling : MonoBehaviour
         // Popups.
         maxDistFromPlayerPopupSpawn = maxDistFromPlayerPropSpawn * 0.6f;
         worldPopupsScaleChange = new Vector3(worldPopupsAnimationSpeed, worldPopupsAnimationSpeed, worldPopupsAnimationSpeed);
+    
+        // Randomly place object to find.
+        float coX = Random.Range(-worldSize + 1, worldSize - 1);
+        float coY = Random.Range(-worldSize + 1, worldSize - 1);
+        objectToFind.transform.position = new Vector3(coX, 2.0f, coY);
     }
 
     // Update is called once per frame
     void Update()
     {
         Vector3 PlayerCo = new Vector3(Player.transform.position.x, 0.0f, Player.transform.position.z);
+        Vector3 ObjectTOFindCo = new Vector3(objectToFind.transform.position.x, 0.0f, objectToFind.transform.position.z);
+        buildWorldEnd(PlayerCo);
         buildWorldBlocks(PlayerCo);
         animateWorldBlocks();
         buildWorldProps(PlayerCo);
         animateWorldProps();
         buildWorldPopups(PlayerCo);
         animateWorldPopups();
+        Debug.Log("Player to Object To Find: " + Vector3.Distance(PlayerCo, ObjectTOFindCo));
+    }
+
+    void buildWorldEnd(Vector3 PlayerCo)
+    {
+        int k = (int)Mathf.Floor(PlayerCo.x);
+        int l = (int)Mathf.Floor(PlayerCo.z);
+        for (int i = k - nWorldBlocksAroundPlayerTest; i < k + nWorldBlocksAroundPlayerTest; i++)
+        {
+            for (int j = l - nWorldBlocksAroundPlayerTest; j < l + nWorldBlocksAroundPlayerTest; j++)
+            {
+                if (Mathf.Abs(i) >= worldSize || Mathf.Abs(j) >= worldSize)
+                {
+                    if(!existingWorldEndBlockCoordinates.ContainsKey(new Vector2Int(i, j)))
+                    {
+                        Vector3 WorldEndBlockCo = new Vector3(worldBlockCenterDist*i, 0, worldBlockCenterDist*j);
+                        GameObject worldEndBlockInst = Instantiate(worldEndBlock, WorldEndBlockCo, Quaternion.identity);
+                        nWorldEndBlocksDebug++;
+                        Debug.Log("World End Block Created! " + nWorldEndBlocksDebug);
+                        existingWorldEndBlockCoordinates[new Vector2Int(i, j)] = worldEndBlockInst.name;                
+                    }
+                }
+            }
+        }
     }
 
     void buildWorldBlocks(Vector3 PlayerCo)
@@ -79,6 +117,10 @@ public class Tiling : MonoBehaviour
         {
             for (int j = l - nWorldBlocksAroundPlayerTest; j < l + nWorldBlocksAroundPlayerTest; j++)
             {
+                if (Mathf.Abs(i) >= worldSize || Mathf.Abs(j) >= worldSize)
+                {
+                    continue;
+                }
                 if (!existingWorldBlockCoordinates.ContainsKey(new Vector2Int(i, j)))
                 {
                     Vector3 WorldBlockCo = new Vector3(worldBlockCenterDist*i, 0, worldBlockCenterDist*j);
@@ -144,6 +186,10 @@ public class Tiling : MonoBehaviour
         {
             for (int j = l - nWorldBlocksAroundPlayerTest; j < l + nWorldBlocksAroundPlayerTest; j++)
             {
+                if (Mathf.Abs(i) >= worldSize || Mathf.Abs(j) >= worldSize)
+                {
+                    continue;
+                }
                 if (Random.value > 0.3) // TODO: control with noise!
                 {
                     existingWorldPropsCoordinates[new Vector2Int(i, j)] = "Empty";
@@ -205,6 +251,10 @@ public class Tiling : MonoBehaviour
         {
             for (int j = l - nWorldBlocksAroundPlayerTest; j < l + nWorldBlocksAroundPlayerTest; j++)
             {
+                if (Mathf.Abs(i) >= worldSize || Mathf.Abs(j) >= worldSize)
+                {
+                    continue;
+                }
                 // Popup only if prop exist and it is not empty.
                 bool createPopup = false;
                 if (existingWorldPropsCoordinates.ContainsKey(new Vector2Int(i, j)))
