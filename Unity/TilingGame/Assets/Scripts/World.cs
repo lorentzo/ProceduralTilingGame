@@ -8,11 +8,11 @@ public class World : MonoBehaviour
 
     public int worldSize = 30;
     public GameObject worldEndBlock;
-    Dictionary<Vector2Int, string> existingWorldEndBlockCoordinates = new Dictionary<Vector2Int, string>();
+    Dictionary<Vector2Int, GameObject> existingWorldEndBlockCoordinates = new Dictionary<Vector2Int, GameObject>();
     private int nWorldEndBlocksDebug;
 
     public GameObject[] lights;
-    Dictionary<Vector2Int, string> existingLightCoordinates = new Dictionary<Vector2Int, string>();
+    Dictionary<Vector2Int, GameObject> existingLightCoordinates = new Dictionary<Vector2Int, GameObject>();
     private int nCreatedLightsDebug = 0;
 
     public GameObject[] WorldBlocks;
@@ -22,27 +22,26 @@ public class World : MonoBehaviour
     public float maxDistFromPlayerWorldBlockSpawn = 4.0f;
     public float worldBlockVariation = 0.2f;
     public float worldBlockJitter = 0.12412f;
-    Dictionary<Vector2Int, string> existingWorldBlockCoordinates = new Dictionary<Vector2Int, string>();
+    Dictionary<Vector2Int, GameObject> existingWorldBlockCoordinates = new Dictionary<Vector2Int, GameObject>();
     private float worldBlockSpawnTreshDelta;
     private int nWorldBlocksBuiltDebug = 0;
     private List<GameObject> worldBlocksInAnimation = new List<GameObject>();
-    private float worldBlocksAnimationSpeed = 10.0f;
+    private float worldBlocksAnimationSpeed = 20.0f;
     private float worldBlockStartingYPosition = -5.0f;
     private float worldBlockEndingYPosition = 0.0f;
 
     public GameObject[] WorldProps;
     private int nWorldProps;
-    Dictionary<Vector2Int, string> existingWorldPropsCoordinates = new Dictionary<Vector2Int, string>();
+    Dictionary<Vector2Int, GameObject> existingWorldPropsCoordinates = new Dictionary<Vector2Int, GameObject>();
     private float maxDistFromPlayerPropSpawn;
-    private List<GameObject> worldPropsInAnimation = new List<GameObject>();
+    private List<(GameObject, float)> worldPropsInAnimation = new List<(GameObject, float)>();
     private int nWorldPropsBuiltDebug = 0;
     private float worldPropsAnimationSpeed = 7.0f;
     private float worldPropStartingYPosition = 5.0f;
-    private float worldPropEndingYPosition = 1.0f;
 
     public GameObject[] WorldPopups;
     private int nWorldPopups;
-    Dictionary<Vector2Int, string> existingWorldPopupsCoordinates = new Dictionary<Vector2Int, string>();
+    Dictionary<Vector2Int, GameObject> existingWorldPopupsCoordinates = new Dictionary<Vector2Int, GameObject>();
     private float maxDistFromPlayerPopupSpawn;
     private List<GameObject> worldPopupsInAnimation = new List<GameObject>();
     private int nWorldPopupsBuiltDebug = 0;
@@ -107,7 +106,7 @@ public class World : MonoBehaviour
                         GameObject worldEndBlockInst = Instantiate(worldEndBlock, WorldEndBlockCo, Quaternion.identity);
                         nWorldEndBlocksDebug++;
                         Debug.Log("World End Block Created! " + nWorldEndBlocksDebug);
-                        existingWorldEndBlockCoordinates[new Vector2Int(i, j)] = worldEndBlockInst.name;                
+                        existingWorldEndBlockCoordinates[new Vector2Int(i, j)] = worldEndBlockInst;                
                     }
                 }
             }
@@ -138,16 +137,13 @@ public class World : MonoBehaviour
                         float tresh = worldBlockSpawnTreshDelta;
                         for (int cIdx = 0; cIdx < nWorldBlocks; cIdx++)
                         {
-                            Debug.Log("Noise: " + noise + " tresh: " + tresh + " treshDelta: " + worldBlockSpawnTreshDelta);
                             if (noise > tresh - worldBlockSpawnTreshDelta && noise < tresh)
                             {
                                 WorldBlockCo.y = worldBlockStartingYPosition;
                                 GameObject worldBlockInst = Instantiate(WorldBlocks[cIdx], WorldBlockCo, Quaternion.identity);
-                                //Renderer instRenderer = worldBlockInst.GetComponent<Renderer>();
-                                //instRenderer.material.SetColor("_Color", Color.red);
                                 nWorldBlocksBuiltDebug++;
-                                Debug.Log("World Block created! " + nWorldBlocksBuiltDebug);
-                                existingWorldBlockCoordinates[new Vector2Int(i, j)] = worldBlockInst.name;
+                                Debug.Log("World Block created! (" + nWorldBlocksBuiltDebug +")");
+                                existingWorldBlockCoordinates[new Vector2Int(i, j)] = worldBlockInst;
                                 worldBlocksInAnimation.Add(worldBlockInst);
                                 break;
                             }
@@ -174,7 +170,7 @@ public class World : MonoBehaviour
             }
             else
             {
-                // It is where it should be, fix position.
+                // It is where it should be, fix position with a bit of variation.
                 Vector3 worldBlockPosition = worldBlock.transform.position;
                 worldBlockPosition.y = worldBlockEndingYPosition + Random.value * 0.2f;
                 worldBlock.transform.position = worldBlockPosition;
@@ -191,36 +187,79 @@ public class World : MonoBehaviour
         {
             for (int j = l - nWorldBlocksAroundPlayerTest; j < l + nWorldBlocksAroundPlayerTest; j++)
             {
+                Vector2Int currCoordinates = new Vector2Int(i, j);
                 if (Mathf.Abs(i) >= worldSize || Mathf.Abs(j) >= worldSize)
                 {
                     continue;
                 }
                 if (Random.value > 0.3) // TODO: control with noise!
                 {
-                    existingWorldPropsCoordinates[new Vector2Int(i, j)] = "Empty";
+                    existingWorldPropsCoordinates[currCoordinates] = null;
                     continue;
                 }
-                if (!existingWorldPropsCoordinates.ContainsKey(new Vector2Int(i, j)))
+                if (!existingWorldPropsCoordinates.ContainsKey(currCoordinates))
                 {                    
                     // World props are created with jitter around world block centers.
                     Vector3 PropCo = new Vector3(
                         worldBlockCenterDist * i + Random.Range(-1.0f, 1.0f), 
                         0, 
                         worldBlockCenterDist * j + Random.Range(-1.0f, 1.0f));
+                    //PropCo = new Vector3(worldBlockCenterDist*i, 0, worldBlockCenterDist*j);
                     Vector3 PlayerToProp = PropCo - PlayerCo;
                     if (PlayerToProp.magnitude < maxDistFromPlayerPropSpawn)
                     {
+                        // Select random world prop.
                         int worldPropIdx = (int)Mathf.Floor(Random.value * nWorldProps);
+
+                        // Make sure that y coordinate is properly placed above world block.
+                        Vector3 currPropSize = WorldProps[worldPropIdx].GetComponent<Collider>().bounds.size;
+                        float worldBlockY = findCorrectYCoordinateOfWorldBlock(currCoordinates);
+                        float worldPropEndingYPosition = currPropSize.y / 2.0f + worldBlockY / 2.0f;
                         PropCo.y = worldPropStartingYPosition;
+
+                        // Create instance.
                         GameObject worldPropInst = Instantiate(WorldProps[worldPropIdx], PropCo, Quaternion.identity);
-                        existingWorldPropsCoordinates[new Vector2Int(i, j)] = worldPropInst.name;
-                        worldPropsInAnimation.Add(worldPropInst);  
+                        existingWorldPropsCoordinates[currCoordinates] = worldPropInst;
+                        worldPropsInAnimation.Add((worldPropInst, worldPropEndingYPosition));  
                         nWorldPropsBuiltDebug++;
-                        Debug.Log("World Prop created! " + nWorldPropsBuiltDebug);
+                        Debug.Log("World Prop created! (" + nWorldPropsBuiltDebug + ")");
                     }
                 }
             }
         }
+    }
+
+    float findCorrectYCoordinateOfWorldBlock(Vector2Int xz)
+    {
+        GameObject currWorldBlock;
+        existingWorldBlockCoordinates.TryGetValue(xz, out currWorldBlock);
+        Vector3 currWorldBlockSize = currWorldBlock.GetComponent<Collider>().bounds.size;
+        return currWorldBlockSize.y;
+    }
+
+    void animateWorldProps()
+    {
+        List<(GameObject, float)> updatedWorldPropsInAnimation = new List<(GameObject, float)>();
+
+        foreach ((GameObject, float) worldProp in worldPropsInAnimation)
+        {
+            // Animated by falling from sky.
+            float movementY = -worldPropsAnimationSpeed * Time.deltaTime;
+            worldProp.Item1.transform.Translate(0, movementY, 0);
+            if (worldProp.Item1.transform.position.y > worldProp.Item2)
+            {
+                // It still needs to be animated.
+                updatedWorldPropsInAnimation.Add((worldProp.Item1,worldProp.Item2));
+            }
+            else
+            {
+                // It is where it should be, fix position.
+                Vector3 worldPropPosition = worldProp.Item1.transform.position;
+                worldPropPosition.y = worldProp.Item2 + Random.value * 0.2f; // a bit of jitter
+                worldProp.Item1.transform.position = worldPropPosition;
+            }
+        }
+        worldPropsInAnimation = updatedWorldPropsInAnimation;
     }
 
     void createLightsOnProps(Vector3 PlayerCo)
@@ -235,15 +274,15 @@ public class World : MonoBehaviour
                 {
                     continue;
                 }
-
+                Vector2Int currCoords = new Vector2Int(i, j);
                 // Light create only if prop exist and it is not empty.
                 bool createLight = false;
-                if (existingWorldPropsCoordinates.ContainsKey(new Vector2Int(i, j)))
+                if (existingWorldPropsCoordinates.ContainsKey(currCoords))
                 {
                     createLight = true;
-                    string existingWorldPropsCoordinatesValue;
-                    existingWorldPropsCoordinates.TryGetValue(new Vector2Int(i, j), out existingWorldPropsCoordinatesValue);
-                    if (existingWorldPropsCoordinatesValue == "Empty")
+                    GameObject existingWorldPropsCoordinatesValue;
+                    existingWorldPropsCoordinates.TryGetValue(currCoords, out existingWorldPropsCoordinatesValue);
+                    if (existingWorldPropsCoordinatesValue == null)
                     {
                         createLight = false;
                     }
@@ -252,42 +291,18 @@ public class World : MonoBehaviour
                 if(createLight)
                 {
                     // Lights are created at world props.
-                    if(!existingLightCoordinates.ContainsKey(new Vector2Int(i, j)))
+                    if(!existingLightCoordinates.ContainsKey(currCoords))
                     {
                         int lightIdx = (int)Mathf.Floor(Random.value * lights.Length);
-                        GameObject lightInst = Instantiate(lights[lightIdx], new Vector3(i, 2.0f, j), Quaternion.identity);
+                        float worldBlockY = findCorrectYCoordinateOfWorldBlock(currCoords);
+                        GameObject lightInst = Instantiate(lights[lightIdx], new Vector3(i, worldBlockY/2.0f + 1.5f, j), Quaternion.identity);
                         nCreatedLightsDebug++;
                         Debug.Log("Light created: " + nCreatedLightsDebug);
-                        existingLightCoordinates[new Vector2Int(i, j)] = lightInst.name;
+                        existingLightCoordinates[currCoords] = lightInst;
                     }
                 }                
             }
         }   
-    }
-
-    void animateWorldProps()
-    {
-        List<GameObject> updatedWorldPropsInAnimation = new List<GameObject>();
-
-        foreach (GameObject worldProp in worldPropsInAnimation)
-        {
-            // Animated by falling from sky.
-            float movementY = -worldPropsAnimationSpeed * Time.deltaTime;
-            worldProp.transform.Translate(0, movementY, 0);
-            if (worldProp.transform.position.y > worldPropEndingYPosition)
-            {
-                // It still needs to be animated.
-                updatedWorldPropsInAnimation.Add(worldProp);
-            }
-            else
-            {
-                // It is where it should be, fix position.
-                Vector3 worldPropPosition = worldProp.transform.position;
-                worldPropPosition.y = worldPropEndingYPosition + Random.value * 0.2f; // a bit of jitter
-                worldProp.transform.position = worldPropPosition;
-            }
-        }
-        worldPropsInAnimation = updatedWorldPropsInAnimation;
     }
 
     void buildWorldPopups(Vector3 PlayerCo)
@@ -307,9 +322,9 @@ public class World : MonoBehaviour
                 if (existingWorldPropsCoordinates.ContainsKey(new Vector2Int(i, j)))
                 {
                     createPopup = true;
-                    string existingWorldPropsCoordinatesValue;
+                    GameObject existingWorldPropsCoordinatesValue;
                     existingWorldPropsCoordinates.TryGetValue(new Vector2Int(i, j), out existingWorldPropsCoordinatesValue);
-                    if (existingWorldPropsCoordinatesValue == "Empty")
+                    if (existingWorldPropsCoordinatesValue == null)
                     {
                         createPopup = false;
                     }
@@ -333,7 +348,7 @@ public class World : MonoBehaviour
                                 PopupCo.y = worldBlockEndingYPosition + 1.0f;  // it depends on the size of world block
                                 GameObject worldPopupInst = Instantiate(WorldPopups[worldPopupIdx], PopupCo, Quaternion.identity);
                                 worldPopupInst.transform.localScale = new Vector3(worldPopupStartingScale,worldPopupStartingScale,worldPopupStartingScale);
-                                existingWorldPopupsCoordinates[new Vector2Int(i, j)] = worldPopupInst.name;
+                                existingWorldPopupsCoordinates[new Vector2Int(i, j)] = worldPopupInst;
                                 worldPopupsInAnimation.Add(worldPopupInst);  
                                 nWorldPopupsBuiltDebug++;
                                 Debug.Log("World Popup created! " + nWorldPopupsBuiltDebug);
