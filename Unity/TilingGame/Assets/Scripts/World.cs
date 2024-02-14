@@ -45,7 +45,7 @@ public class World : MonoBehaviour
     private float maxDistFromPlayerPopupSpawn;
     private List<GameObject> worldPopupsInAnimation = new List<GameObject>();
     private int nWorldPopupsBuiltDebug = 0;
-    private float worldPopupsAnimationSpeed = 3.0f;
+    private float worldPopupsAnimationSpeed = 0.5f;
     Vector3 worldPopupsScaleChange;
     private float worldPopupStartingScale = 0.0f;
     private float worldPopupEndingScale = 0.3f;
@@ -213,7 +213,7 @@ public class World : MonoBehaviour
 
                         // Make sure that y coordinate is properly placed above world block.
                         Vector3 currPropSize = WorldProps[worldPropIdx].GetComponent<Collider>().bounds.size;
-                        float worldBlockY = findCorrectYCoordinateOfWorldBlock(currCoordinates);
+                        float worldBlockY = findYCoordinateOfWorldBlock(currCoordinates);
                         float worldPropEndingYPosition = currPropSize.y / 2.0f + worldBlockY / 2.0f;
                         PropCo.y = worldPropStartingYPosition;
 
@@ -229,7 +229,7 @@ public class World : MonoBehaviour
         }
     }
 
-    float findCorrectYCoordinateOfWorldBlock(Vector2Int xz)
+    float findYCoordinateOfWorldBlock(Vector2Int xz)
     {
         GameObject currWorldBlock;
         existingWorldBlockCoordinates.TryGetValue(xz, out currWorldBlock);
@@ -294,7 +294,7 @@ public class World : MonoBehaviour
                     if(!existingLightCoordinates.ContainsKey(currCoords))
                     {
                         int lightIdx = (int)Mathf.Floor(Random.value * lights.Length);
-                        float worldBlockY = findCorrectYCoordinateOfWorldBlock(currCoords);
+                        float worldBlockY = findYCoordinateOfWorldBlock(currCoords);
                         GameObject lightInst = Instantiate(lights[lightIdx], new Vector3(i, worldBlockY/2.0f + 1.5f, j), Quaternion.identity);
                         nCreatedLightsDebug++;
                         Debug.Log("Light created: " + nCreatedLightsDebug);
@@ -317,13 +317,14 @@ public class World : MonoBehaviour
                 {
                     continue;
                 }
+                Vector2Int currCoord = new Vector2Int(i, j);
                 // Popup only if prop exist and it is not empty.
                 bool createPopup = false;
-                if (existingWorldPropsCoordinates.ContainsKey(new Vector2Int(i, j)))
+                if (existingWorldPropsCoordinates.ContainsKey(currCoord))
                 {
                     createPopup = true;
                     GameObject existingWorldPropsCoordinatesValue;
-                    existingWorldPropsCoordinates.TryGetValue(new Vector2Int(i, j), out existingWorldPropsCoordinatesValue);
+                    existingWorldPropsCoordinates.TryGetValue(currCoord, out existingWorldPropsCoordinatesValue);
                     if (existingWorldPropsCoordinatesValue == null)
                     {
                         createPopup = false;
@@ -331,7 +332,7 @@ public class World : MonoBehaviour
                 }
                 if (createPopup)
                 {
-                    if (!existingWorldPopupsCoordinates.ContainsKey(new Vector2Int(i, j)))
+                    if (!existingWorldPopupsCoordinates.ContainsKey(currCoord))
                     {
                         int nPopupsToSpawn = 4;
                         for (int pi = 0; pi < nPopupsToSpawn; pi++)
@@ -345,10 +346,15 @@ public class World : MonoBehaviour
                             if (PlayerToPopup.magnitude < maxDistFromPlayerPopupSpawn)
                             {
                                 int worldPopupIdx = (int)Mathf.Floor(Random.value * nWorldPopups);
-                                PopupCo.y = worldBlockEndingYPosition + 1.0f;  // it depends on the size of world block
+                                
+                                // Compute Y position.
+                                float worldBlockY = findYCoordinateOfWorldBlock(currCoord);
+                                Vector3 currPopUpSize = WorldPopups[worldPopupIdx].GetComponent<Collider>().bounds.size;
+                                PopupCo.y = worldBlockY / 2.0f + currPopUpSize.y / 2.0f;  // it depends on the size of world block
+
                                 GameObject worldPopupInst = Instantiate(WorldPopups[worldPopupIdx], PopupCo, Quaternion.identity);
                                 worldPopupInst.transform.localScale = new Vector3(worldPopupStartingScale,worldPopupStartingScale,worldPopupStartingScale);
-                                existingWorldPopupsCoordinates[new Vector2Int(i, j)] = worldPopupInst;
+                                existingWorldPopupsCoordinates[currCoord] = worldPopupInst;
                                 worldPopupsInAnimation.Add(worldPopupInst);  
                                 nWorldPopupsBuiltDebug++;
                                 Debug.Log("World Popup created! " + nWorldPopupsBuiltDebug);
