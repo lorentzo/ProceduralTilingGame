@@ -40,8 +40,8 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // If player falls below the world, restart position.
-        if (transform.position.y < -3.0f)
+        // If player falls below the world or requests restart, restart position.
+        if (transform.position.y < -3.0f || Input.GetKey("r"))
         {
             transform.position = new Vector3(0.0f, 3.0f, 0.0f);
         }

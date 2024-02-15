@@ -21,7 +21,7 @@ public class World : MonoBehaviour
     public int nWorldBlocksAroundPlayerTest = 3;
     public float maxDistFromPlayerWorldBlockSpawn = 4.0f;
     public float worldBlockVariation = 0.2f;
-    public float worldBlockJitter = 0.12412f;
+    public float worldBlockJitter = 32.7342412f;
     Dictionary<Vector2Int, GameObject> existingWorldBlockCoordinates = new Dictionary<Vector2Int, GameObject>();
     private float worldBlockSpawnTreshDelta;
     private int nWorldBlocksBuiltDebug = 0;
@@ -134,6 +134,7 @@ public class World : MonoBehaviour
                         float noise = Mathf.PerlinNoise(
                             (WorldBlockCo.x+0.5f)*worldBlockVariation+worldBlockJitter, 
                             (WorldBlockCo.z+0.5f)*worldBlockVariation+worldBlockJitter);
+                        Debug.Log(noise);
                         float tresh = worldBlockSpawnTreshDelta;
                         for (int cIdx = 0; cIdx < nWorldBlocks; cIdx++)
                         {
@@ -141,6 +142,10 @@ public class World : MonoBehaviour
                             {
                                 WorldBlockCo.y = worldBlockStartingYPosition;
                                 GameObject worldBlockInst = Instantiate(WorldBlocks[cIdx], WorldBlockCo, Quaternion.identity);
+                                // Vary world block Y scale.
+                                //Vector3 newScale = worldBlockInst.transform.localScale;
+                                //newScale.y = Random.value * 2.0f + 0.5f;
+                                //worldBlockInst.transform.localScale = newScale;
                                 nWorldBlocksBuiltDebug++;
                                 Debug.Log("World Block created! (" + nWorldBlocksBuiltDebug +")");
                                 existingWorldBlockCoordinates[new Vector2Int(i, j)] = worldBlockInst;
