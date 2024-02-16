@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class World : MonoBehaviour
 {
@@ -22,7 +23,7 @@ public class World : MonoBehaviour
     public float maxDistFromPlayerWorldBlockSpawn = 4.0f;
     public float worldBlockVariation = 0.2f;
     public float worldBlockJitter = 32.7342412f;
-    Dictionary<Vector2Int, GameObject> existingWorldBlockCoordinates = new Dictionary<Vector2Int, GameObject>();
+    private Dictionary<Vector2Int, GameObject> existingWorldBlockCoordinates = new Dictionary<Vector2Int, GameObject>();
     private float worldBlockSpawnTreshDelta;
     private int nWorldBlocksBuiltDebug = 0;
     private List<GameObject> worldBlocksInAnimation = new List<GameObject>();
@@ -87,7 +88,15 @@ public class World : MonoBehaviour
         animateWorldProps();
         buildWorldPopups(PlayerCo);
         animateWorldPopups();
-        //Debug.Log("Player to Object To Find: " + Vector3.Distance(PlayerCo, ObjectTOFindCo));
+        if (Vector3.Distance(PlayerCo, ObjectTOFindCo) < 1.0f)
+        {
+            resetWorld();
+        }
+    }
+
+    void resetWorld()
+    {
+        SceneManager.LoadScene("MainScene");
     }
 
     void buildWorldEnd(Vector3 PlayerCo)
