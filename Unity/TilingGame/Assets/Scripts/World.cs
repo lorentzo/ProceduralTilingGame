@@ -22,7 +22,7 @@ public class World : MonoBehaviour
     public int nWorldBlocksAroundPlayerTest = 3;
     public float maxDistFromPlayerWorldBlockSpawn = 4.0f;
     public float worldBlockVariation = 0.2f;
-    public float worldBlockJitter = 32.7342412f;
+    private float worldBlockJitter;
     private Dictionary<Vector2Int, GameObject> existingWorldBlockCoordinates = new Dictionary<Vector2Int, GameObject>();
     private float worldBlockSpawnTreshDelta;
     private int nWorldBlocksBuiltDebug = 0;
@@ -56,6 +56,8 @@ public class World : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        worldBlockJitter = Random.value * 50.0f;
+
         // World Blocks.
         worldBlockCenterDist = 1.0f; // TODO: compute from WorldBlockCo prefab.
         nWorldBlocks = WorldBlocks.Length;
@@ -91,6 +93,10 @@ public class World : MonoBehaviour
         if (Vector3.Distance(PlayerCo, ObjectTOFindCo) < 1.0f)
         {
             resetWorld();
+        }
+        if (Input.GetKeyDown("escape"))
+        {
+            SceneManager.LoadScene("StartScene");
         }
     }
 
@@ -235,6 +241,7 @@ public class World : MonoBehaviour
                         GameObject worldPropInst = Instantiate(WorldProps[worldPropIdx], PropCo, Quaternion.identity);
                         existingWorldPropsCoordinates[currCoordinates] = worldPropInst;
                         worldPropsInAnimation.Add((worldPropInst, worldPropEndingYPosition));  
+                        worldPropInst.transform.Rotate(new Vector3(0.0f, Random.value * 360.0f, 0.0f));
                         nWorldPropsBuiltDebug++;
                         Debug.Log("World Prop created! (" + nWorldPropsBuiltDebug + ")");
                     }
@@ -299,6 +306,15 @@ public class World : MonoBehaviour
                     if (existingWorldPropsCoordinatesValue == null)
                     {
                         createLight = false;
+                    }
+                }
+
+                if (createLight)
+                {
+                    if (Random.value > 0.1)
+                    {
+                        createLight = false;
+                        existingLightCoordinates[currCoords] = null;
                     }
                 }
 
