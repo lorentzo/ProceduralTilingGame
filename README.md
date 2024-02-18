@@ -20,19 +20,14 @@ Player by moving builds the map.
 
 ### TODOs
 
-* Start screen
-  * Enhance start button
-  * Add credits
-* Add Cold-warm gameplay
-  * Change world light depending on distance
-  * game instances - randomize maps using `worldBlockJitter`
-* Worldblocks do not have te be always instances - leave some empty ground?
-* Add props/popups to specific blocks
-* Taller and lower world blocks
-* Improve noise randomization
-* Better world blocks and world prop models (Blender and Houdini low poly)
-* Player: 
-  * Light
-* Light
+* Enhance world light
+  * Change world light depending on distance from object
   * world light
   * local lights
+  * number of point lights
+  * player light
+* Enhance world generation
+  * Add props/popups to specific blocks
+  * Taller and lower world blocks
+* Better world blocks and world prop models (Blender and Houdini low poly)
+* music - enhance audio tracks?
