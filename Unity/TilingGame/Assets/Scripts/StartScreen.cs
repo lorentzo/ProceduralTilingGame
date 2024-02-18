@@ -21,4 +21,9 @@ public class StartScreen : MonoBehaviour
     {
         SceneManager.LoadScene("MainScene");
     }
+
+    public void ExitGame()
+    {
+        Application.Quit();
+    }
 }
