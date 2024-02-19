@@ -37,7 +37,7 @@ public class World : MonoBehaviour
     private float maxDistFromPlayerPropSpawn;
     private List<(GameObject, float)> worldPropsInAnimation = new List<(GameObject, float)>();
     private int nWorldPropsBuiltDebug = 0;
-    private float worldPropsAnimationSpeed = 7.0f;
+    private float worldPropsAnimationSpeed = 25.0f;
     private float worldPropStartingYPosition = 5.0f;
 
     public GameObject[] WorldPopups;
@@ -46,7 +46,7 @@ public class World : MonoBehaviour
     private float maxDistFromPlayerPopupSpawn;
     private List<GameObject> worldPopupsInAnimation = new List<GameObject>();
     private int nWorldPopupsBuiltDebug = 0;
-    private float worldPopupsAnimationSpeed = 0.5f;
+    private float worldPopupsAnimationSpeed = 3.0f;
     Vector3 worldPopupsScaleChange;
     private float worldPopupStartingScale = 0.0f;
     private float worldPopupEndingScale = 0.3f;
@@ -90,6 +90,7 @@ public class World : MonoBehaviour
         animateWorldProps();
         buildWorldPopups(PlayerCo);
         animateWorldPopups();
+        //animateLights();
         if (Vector3.Distance(PlayerCo, ObjectTOFindCo) < 1.0f)
         {
             resetWorld();
@@ -212,7 +213,7 @@ public class World : MonoBehaviour
                 {
                     continue;
                 }
-                if (Random.value > 0.3) // TODO: control with noise!
+                if (Random.value > 0.2) // TODO: control with noise!
                 {
                     existingWorldPropsCoordinates[currCoordinates] = null;
                     continue;
@@ -233,8 +234,10 @@ public class World : MonoBehaviour
 
                         // Make sure that y coordinate is properly placed above world block.
                         Vector3 currPropSize = WorldProps[worldPropIdx].GetComponent<Collider>().bounds.size;
+                        Vector3 currPropCenter = WorldProps[worldPropIdx].GetComponent<Collider>().bounds.center;
                         float worldBlockY = findYCoordinateOfWorldBlock(currCoordinates);
-                        float worldPropEndingYPosition = currPropSize.y / 2.0f + worldBlockY / 2.0f;
+                        float worldPropEndingYPosition = worldBlockY / 2.0f;// + currPropSize.y / 2.0f + currPropCenter.y;
+                        Debug.Log(currPropSize.y + " " + worldBlockY + " " + worldPropEndingYPosition);
                         PropCo.y = worldPropStartingYPosition;
 
                         // Create instance.
@@ -414,5 +417,20 @@ public class World : MonoBehaviour
             }
         }
         worldPopupsInAnimation = updatedWorldPopupsInAnimation;
+    }
+
+    void animateLights()
+    {
+        foreach(KeyValuePair<Vector2Int, GameObject> entry in existingLightCoordinates)
+        {
+            if (entry.Value != null)
+            {
+                float noise = Mathf.PerlinNoise(
+                            (entry.Value.transform.position.x+0.5f), 
+                            (entry.Value.transform.position.z+0.5f)) - 1.0f;
+                Vector3 translateVector = new Vector3(noise, 0.0f, noise);
+                entry.Value.transform.Translate(translateVector * Time.deltaTime, Space.World);
+            }
+        }
     }
 }
