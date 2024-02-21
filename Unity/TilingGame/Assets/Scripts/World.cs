@@ -46,10 +46,10 @@ public class World : MonoBehaviour
     private float maxDistFromPlayerPopupSpawn;
     private List<GameObject> worldPopupsInAnimation = new List<GameObject>();
     private int nWorldPopupsBuiltDebug = 0;
-    private float worldPopupsAnimationSpeed = 3.0f;
+    private float worldPopupsAnimationSpeed = 0.5f;
     Vector3 worldPopupsScaleChange;
     private float worldPopupStartingScale = 0.0f;
-    private float worldPopupEndingScale = 0.3f;
+    private float worldPopupEndingScale = 0.5f;
 
     public GameObject objectToFind;
 
@@ -70,7 +70,8 @@ public class World : MonoBehaviour
         // Popups.
         maxDistFromPlayerPopupSpawn = maxDistFromPlayerPropSpawn * 0.6f;
         worldPopupsScaleChange = new Vector3(worldPopupsAnimationSpeed, worldPopupsAnimationSpeed, worldPopupsAnimationSpeed);
-    
+        nWorldPopups = WorldPopups.Length;
+
         // Randomly place object to find.
         float coX = Random.Range(-worldSize + 1, worldSize - 1);
         float coY = Random.Range(-worldSize + 1, worldSize - 1);
@@ -121,7 +122,7 @@ public class World : MonoBehaviour
                         Vector3 WorldEndBlockCo = new Vector3(worldBlockCenterDist*i, 0, worldBlockCenterDist*j);
                         GameObject worldEndBlockInst = Instantiate(worldEndBlock, WorldEndBlockCo, Quaternion.identity);
                         nWorldEndBlocksDebug++;
-                        Debug.Log("World End Block Created! " + nWorldEndBlocksDebug);
+                        //Debug.Log("World End Block Created! " + nWorldEndBlocksDebug);
                         existingWorldEndBlockCoordinates[new Vector2Int(i, j)] = worldEndBlockInst;                
                     }
                 }
@@ -150,7 +151,7 @@ public class World : MonoBehaviour
                         float noise = Mathf.PerlinNoise(
                             (WorldBlockCo.x+0.5f)*worldBlockVariation+worldBlockJitter, 
                             (WorldBlockCo.z+0.5f)*worldBlockVariation+worldBlockJitter);
-                        Debug.Log(noise);
+                        //Debug.Log(noise);
                         float tresh = worldBlockSpawnTreshDelta;
                         for (int cIdx = 0; cIdx < nWorldBlocks; cIdx++)
                         {
@@ -163,7 +164,7 @@ public class World : MonoBehaviour
                                 //newScale.y = Random.value * 2.0f + 0.5f;
                                 //worldBlockInst.transform.localScale = newScale;
                                 nWorldBlocksBuiltDebug++;
-                                Debug.Log("World Block created! (" + nWorldBlocksBuiltDebug +")");
+                                //Debug.Log("World Block created! (" + nWorldBlocksBuiltDebug +")");
                                 existingWorldBlockCoordinates[new Vector2Int(i, j)] = worldBlockInst;
                                 worldBlocksInAnimation.Add(worldBlockInst);
                                 break;
@@ -237,7 +238,7 @@ public class World : MonoBehaviour
                         Vector3 currPropCenter = WorldProps[worldPropIdx].GetComponent<Collider>().bounds.center;
                         float worldBlockY = findYCoordinateOfWorldBlock(currCoordinates);
                         float worldPropEndingYPosition = worldBlockY / 2.0f;// + currPropSize.y / 2.0f + currPropCenter.y;
-                        Debug.Log(currPropSize.y + " " + worldBlockY + " " + worldPropEndingYPosition);
+                        //Debug.Log(currPropSize.y + " " + worldBlockY + " " + worldPropEndingYPosition);
                         PropCo.y = worldPropStartingYPosition;
 
                         // Create instance.
@@ -246,7 +247,7 @@ public class World : MonoBehaviour
                         worldPropsInAnimation.Add((worldPropInst, worldPropEndingYPosition));  
                         worldPropInst.transform.Rotate(new Vector3(0.0f, Random.value * 360.0f, 0.0f));
                         nWorldPropsBuiltDebug++;
-                        Debug.Log("World Prop created! (" + nWorldPropsBuiltDebug + ")");
+                        //Debug.Log("World Prop created! (" + nWorldPropsBuiltDebug + ")");
                     }
                 }
             }
@@ -330,7 +331,7 @@ public class World : MonoBehaviour
                         float worldBlockY = findYCoordinateOfWorldBlock(currCoords);
                         GameObject lightInst = Instantiate(lights[lightIdx], new Vector3(i, worldBlockY/2.0f + 1.5f, j), Quaternion.identity);
                         nCreatedLightsDebug++;
-                        Debug.Log("Light created: " + nCreatedLightsDebug);
+                        //Debug.Log("Light created: " + nCreatedLightsDebug);
                         existingLightCoordinates[currCoords] = lightInst;
                     }
                 }                
@@ -390,7 +391,7 @@ public class World : MonoBehaviour
                                 existingWorldPopupsCoordinates[currCoord] = worldPopupInst;
                                 worldPopupsInAnimation.Add(worldPopupInst);  
                                 nWorldPopupsBuiltDebug++;
-                                Debug.Log("World Popup created! " + nWorldPopupsBuiltDebug);
+                                //Debug.Log("World Popup created! " + nWorldPopupsBuiltDebug);
                             }
                         }
                     }
@@ -412,7 +413,7 @@ public class World : MonoBehaviour
             }
             else
             {
-                float popUpScale = worldPopupEndingScale + Random.value * 0.2f;
+                float popUpScale = worldPopupEndingScale + Random.value * 0.4f + 0.05f;
                 popup.transform.localScale = new Vector3(popUpScale,popUpScale,popUpScale);
             }
         }

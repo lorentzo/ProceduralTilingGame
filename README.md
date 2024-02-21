@@ -6,28 +6,25 @@ Unity 2022.3.13f1
 
 Player by moving builds the map.
 
-![](RepoResources/0.png)
-![](RepoResources/0_1.png)
+
 ![](RepoResources/1.png)
-![](RepoResources/2a.png)
-![](RepoResources/3a.png)
-![](RepoResources/2.png)
 ![](RepoResources/3.png)
 ![](RepoResources/4.png)
 ![](RepoResources/5.png)
 ![](RepoResources/6.png)
-![](RepoResources/7.png)
+
 
 ### TODOs
 
-* Enhance world light
-  * Change world light depending on distance from object
-  * world light
-  * local lights
-  * number of point lights
-  * player light
+* post processing
+* splash screen at game start
+* splash screen at game end
+* Game title
+* WebGL -> Itch build
+* Github game features 
+* enhance movement (less collisions)
 * Enhance world generation
   * Add props/popups to specific blocks
   * Taller and lower world blocks
-* Better world blocks and world prop models (Blender and Houdini low poly)
+* Enhance colors and shapes
 * music - enhance audio tracks?
