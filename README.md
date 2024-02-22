@@ -1,9 +1,6 @@
 # Procedural Tiling Game
 
-Tech stack:
-* Unity 2022.3.13f1
-* Blender 4.0.1
-* Krita
+Play it on Itch.io: https://lovbos.itch.io/cold-warm-exploration-game
 
 Game features:
 * Fully playable prototype.
@@ -33,11 +30,13 @@ Game features:
 ![](RepoResources/12.png)
 ![](RepoResources/13.png)
 
+Tech stack:
+* Unity 2022.3.13f1
+* Blender 4.0.1
+* Krita
 
 ### TODOs
 
-* Game title
-* WebGL -> Itch build
 * splash screen at game start
 * splash screen at game end
 * Enhance world generation
