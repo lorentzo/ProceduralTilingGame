@@ -3,6 +3,7 @@
 Tech stack:
 * Unity 2022.3.13f1
 * Blender 4.0.1
+* Krita
 
 Game features:
 * Fully playable prototype.
