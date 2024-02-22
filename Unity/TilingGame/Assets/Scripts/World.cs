@@ -53,6 +53,13 @@ public class World : MonoBehaviour
 
     public GameObject objectToFind;
 
+    public GameObject gameEndCanvas;
+
+    void Awake()
+    {
+        gameEndCanvas.SetActive(false);
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -94,6 +101,7 @@ public class World : MonoBehaviour
         //animateLights();
         if (Vector3.Distance(PlayerCo, ObjectTOFindCo) < 1.0f)
         {
+            gameEndCanvas.SetActive(false);
             resetWorld();
         }
         if (Input.GetKeyDown("escape"))
@@ -194,7 +202,7 @@ public class World : MonoBehaviour
             {
                 // It is where it should be, fix position with a bit of variation.
                 Vector3 worldBlockPosition = worldBlock.transform.position;
-                worldBlockPosition.y = worldBlockEndingYPosition + Random.value * 0.2f;
+                worldBlockPosition.y = worldBlockEndingYPosition + Random.value * 0.1f;
                 worldBlock.transform.position = worldBlockPosition;
             }
         }
