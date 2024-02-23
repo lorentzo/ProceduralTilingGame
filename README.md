@@ -43,6 +43,7 @@ Tech stack:
   * Add props/popups to specific blocks
   * Taller and lower world blocks
 * enhance movement (less collisions)?
+* enhance day-night cycle?
 * Enhance colors and shapes?
 * post processing?
 * music - enhance audio tracks?
